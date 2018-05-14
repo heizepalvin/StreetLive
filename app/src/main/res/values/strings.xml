@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">StreetLive</string>
+    <string name="app_name_kor">스트릿라이브</string>
+    <string name="login_id">ID</string>
+    <string name="login_pwd">P.W</string>
+    <string name="login_kakao">카카오톡으로 시작하기</string>
+    <string name="login_naver">네이버로 시작하기</string>
+    <string name="sign_up">회원가입</string>
+    <string name="login_button">로그인</string>
 </resources>

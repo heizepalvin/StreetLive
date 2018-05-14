@@ -7,4 +7,6 @@
     <string name="login_naver">네이버로 시작하기</string>
     <string name="sign_up">회원가입</string>
     <string name="login_button">로그인</string>
+    <string name="login_auto">자동로그인</string>
+    <string name="login_id_remember">아이디저장</string>
 </resources>

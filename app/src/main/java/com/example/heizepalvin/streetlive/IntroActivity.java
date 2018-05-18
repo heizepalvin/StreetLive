@@ -11,6 +11,11 @@ import com.tsengvn.typekit.TypekitContextWrapper;
 
 public class IntroActivity extends AppCompatActivity {
 
+    //Typekit 라이브러리 (폰트 적용)를 사용하기 위해 만든 메소드
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(TypekitContextWrapper.wrap(newBase));
+    }
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -31,9 +36,5 @@ public class IntroActivity extends AppCompatActivity {
 
     }
 
-    //Typekit 라이브러리 (폰트 적용)를 사용하기 위해 만든 메소드
-    @Override
-    protected void attachBaseContext(Context newBase) {
-        super.attachBaseContext(TypekitContextWrapper.wrap(newBase));
-    }
+
 }

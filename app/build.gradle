@@ -16,6 +16,11 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    //JDBC 때문에 소스코드의 레벨을 Java 8 으로 설정
+    compileOptions{
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 //    packagingOptions{
 //        exclude 'META-INF/DEPENDENCIES'
 //        exclude 'META-INF/LICENSE'
@@ -47,5 +52,7 @@ dependencies {
     implementation 'com.android.support:support-core-utils:27.1.1'
     implementation 'com.android.support:customtabs:27.1.1'
     implementation 'com.android.support:support-v4:27.1.1'
+    //카카오톡 로그인 연동 SDK 추가
+    implementation group: 'com.kakao.sdk', name: 'usermgmt', version: project.KAKAO_SDK_VERSION
 
 }

@@ -9,4 +9,12 @@
     <string name="login_button">로그인</string>
     <string name="login_auto">자동로그인</string>
     <string name="login_id_remember">아이디저장</string>
+    <string name="nickname_write">사용하실 닉네임을 입력해주세요.</string>
+    <string name="gender_pick">성별을 선택해주세요.</string>
+    <string name="birth_pick">생년월일 8자리를 입력해주세요.</string>
+    <string name="nickname_write_count">0/15</string>
+    <string name="birth_write_count">0/8</string>
+    <string name="gender_man">남성</string>
+    <string name="gender_woman">여성</string>
+    <string name="kakao_app_key">793e68accb7a7e8d9a2f3c0ca1c68cac</string>
 </resources>

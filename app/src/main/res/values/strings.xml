@@ -3,18 +3,24 @@
     <string name="app_name_kor">스트릿라이브</string>
     <string name="login_id">ID</string>
     <string name="login_pwd">P.W</string>
+    <string name="login_pwd2">P.W2</string>
     <string name="login_kakao">카카오톡으로 시작하기</string>
     <string name="login_naver">네이버로 시작하기</string>
+    <string name="login_nickname">닉네임</string>
     <string name="sign_up">회원가입</string>
     <string name="login_button">로그인</string>
     <string name="login_auto">자동로그인</string>
     <string name="login_id_remember">아이디저장</string>
     <string name="nickname_write">사용하실 닉네임을 입력해주세요.</string>
+    <string name="pwd_write">8~20자리 영문,숫자,특수문자</string>
     <string name="gender_pick">성별을 선택해주세요.</string>
+    <string name="gender_write">성별</string>
     <string name="birth_pick">생년월일 8자리를 입력해주세요.</string>
+    <string name="birth_write">생년월일</string>
     <string name="nickname_write_count">0/15</string>
     <string name="birth_write_count">0/8</string>
     <string name="gender_man">남성</string>
     <string name="gender_woman">여성</string>
     <string name="kakao_app_key">793e68accb7a7e8d9a2f3c0ca1c68cac</string>
+    <string name="sign_up_id_hint">아이디를 입력해주세요.</string>
 </resources>

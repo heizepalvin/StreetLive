@@ -4,10 +4,9 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.PersistableBundle;
-import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
@@ -28,8 +27,6 @@ import com.tsengvn.typekit.TypekitContextWrapper;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
 
 import butterknife.BindView;
@@ -197,7 +194,6 @@ public class infoWriteActivity extends AppCompatActivity {
                         notServiceLoginUserInfoDBSaveAsyncTask naverLoginUserInfoDBSaveAsyncTask = new notServiceLoginUserInfoDBSaveAsyncTask();
                         naverLoginUserInfoDBSaveAsyncTask.execute(notServiceUserID,saveUserNickname,saveUserGender,saveUserBirth,serviceName);
 
-
                     } else {
                         //postgresql 연동해서 카카오톡 연동 사용자의 정보를 DB에 저장
                         saveUserNickname = infoWriteActivityNameInput.getText().toString();
@@ -210,6 +206,14 @@ public class infoWriteActivity extends AppCompatActivity {
                         notServiceLoginUserInfoDBSaveAsyncTask kakaoLoginUserInfoDBSaveAsyncTask = new notServiceLoginUserInfoDBSaveAsyncTask();
                         kakaoLoginUserInfoDBSaveAsyncTask.execute(notServiceUserID,saveUserNickname,saveUserGender,saveUserBirth,serviceName);
                     }
+                    //SharedPreference에 사용자 정보 저장
+                    SharedPreferences saveUserInfo = getSharedPreferences("userLoginInfo",MODE_PRIVATE);
+                    SharedPreferences.Editor saveUserInfoEditor = saveUserInfo.edit();
+                    saveUserInfoEditor.putString("nickname",saveUserNickname);
+                    saveUserInfoEditor.putString("gender",saveUserGender);
+                    saveUserInfoEditor.putString("birth",saveUserBirth);
+                    saveUserInfoEditor.commit();
+
                     // Toast 메시지를 띄우고 메인화면으로 이동
                     Toast.makeText(infoWriteActivity.this, "환영합니다!", Toast.LENGTH_SHORT).show();
                     Intent infoWriteActivityToMainActivityIntent = new Intent(infoWriteActivity.this, MainActivity.class);

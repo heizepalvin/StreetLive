@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/menu_live"
+        app:showAsAction="ifRoom"
+        android:enabled="true"
+        android:icon = "@drawable/new_bottom"
+        android:title="라이브"
+        />
+    <item
+        android:id="@+id/menu_vod"
+        app:showAsAction="ifRoom"
+        android:enabled="true"
+        android:icon="@drawable/movie"
+        android:title="VOD"/>
+    <item
+        android:id="@+id/menu_menu"
+        app:showAsAction="ifRoom"
+        android:enabled="true"
+        android:icon="@drawable/list"
+        android:title="메뉴"/>
+</menu>

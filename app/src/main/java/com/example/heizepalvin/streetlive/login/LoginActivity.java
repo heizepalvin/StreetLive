@@ -3,6 +3,7 @@ package com.example.heizepalvin.streetlive.login;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.AsyncTask;
@@ -41,6 +42,7 @@ import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 
 import butterknife.BindView;
@@ -232,6 +234,21 @@ public class LoginActivity extends AppCompatActivity {
             super.onPostExecute(s);
 
             if(!s.equals("0")){
+                String[] result = s.split("/");
+                String resultNickname = result[0];
+                String resultGender = result[1];
+                String resultBirth = result[2];
+                Log.e("naverDataResultSplit",resultNickname);
+                Log.e("naverDataResultSplit",resultGender);
+                Log.e("naverDataResultSplit",resultBirth);
+
+                SharedPreferences saveUserInfo = getSharedPreferences("userLoginInfo",MODE_PRIVATE);
+                SharedPreferences.Editor saveUserInfoEditor = saveUserInfo.edit();
+                saveUserInfoEditor.putString("nickname",resultNickname);
+                saveUserInfoEditor.putString("gender",resultGender);
+                saveUserInfoEditor.putString("birth",resultBirth);
+                saveUserInfoEditor.commit();
+
                 Toast.makeText(LoginActivity.this, "환영합니다!", Toast.LENGTH_SHORT).show();
                 Intent naverLoginUserMainMoveIntent = new Intent(LoginActivity.this,MainActivity.class);
                 startActivity(naverLoginUserMainMoveIntent);
@@ -283,7 +300,20 @@ public class LoginActivity extends AppCompatActivity {
             while (pgResultSet.next()){
                 result = pgResultSet.getString("count");
                 Log.e("네이버로그인정보","네이버로그인정보가있다 = " + pgResultSet.getString("count"));
-                return result;
+                if(!result.equals("0")){
+                    sql = "select * from login.naver_user where id ='" + userID +"';";
+                    pgResultSet = pgStatement.executeQuery(sql);
+                    while(pgResultSet.next()){
+                        String resultNickname = pgResultSet.getString("nickname");
+                        String resultGender = pgResultSet.getString("gender");
+                        int resultBirth = pgResultSet.getInt("birth");
+                        result = resultNickname+"/"+resultGender+"/"+resultBirth;
+                        Log.e("naverDataResultAppend",result);
+                        return result;
+                    }
+                } else {
+                    return result;
+                }
             }
 
             pgStatement.close();
@@ -356,6 +386,20 @@ public class LoginActivity extends AppCompatActivity {
             super.onPostExecute(s);
 
             if(!s.equals("0")){
+                String[] result = s.split("/");
+                String resultNickname = result[0];
+                String resultGender = result[1];
+                String resultBirth = result[2];
+                Log.e("kakaoDataResultSplit",resultNickname);
+                Log.e("kakaoDataResultSplit",resultGender);
+                Log.e("kakaoDataResultSplit",resultBirth);
+
+                SharedPreferences saveUserInfo = getSharedPreferences("userLoginInfo",MODE_PRIVATE);
+                SharedPreferences.Editor saveUserInfoEditor = saveUserInfo.edit();
+                saveUserInfoEditor.putString("nickname",resultNickname);
+                saveUserInfoEditor.putString("gender",resultGender);
+                saveUserInfoEditor.putString("birth",resultBirth);
+                saveUserInfoEditor.commit();
                 Toast.makeText(LoginActivity.this,"환영합니다!", Toast.LENGTH_SHORT).show();
                 Intent kakaoLoginUserMainMoveIntent = new Intent(LoginActivity.this,MainActivity.class);
                 startActivity(kakaoLoginUserMainMoveIntent);
@@ -404,7 +448,20 @@ public class LoginActivity extends AppCompatActivity {
                 while(pgResultSet.next()){
                     result = pgResultSet.getString("count");
                     Log.e("kakaoLoginUserInfoDBSearch","정보 = "+pgResultSet.getString("count"));
-                    return result;
+                    if(!result.equals("0")){
+                        sql = "select * from login.kakao_user where id = '"+userID+"';";
+                        pgResultSet = pgStatement.executeQuery(sql);
+                        while(pgResultSet.next()){
+                            String resultNickname = pgResultSet.getString("nickname");
+                            String resultGender = pgResultSet.getString("gender");
+                            int resultBirth = pgResultSet.getInt("birth");
+                            result = resultNickname+"/"+resultGender+"/"+resultBirth;
+                            Log.e("kakaoDataResultAppend",result);
+                            return result;
+                        }
+                    } else {
+                        return result;
+                    }
                 }
                 pgStatement.close();
                 return null;
@@ -426,15 +483,39 @@ public class LoginActivity extends AppCompatActivity {
 
 //        getKakaoHashKey();
 
+        // 로그인 버튼 이벤트
+
+        loginActivityLoginBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                //DB에서 회원정보 확인하는 AsyncTask
+                serviceLoginInfoDBConfirm serviceLoginInfoDBConfirm = new serviceLoginInfoDBConfirm();
+                serviceLoginInfoDBConfirm.execute(loginActivityIDInput.getText().toString(),loginActivityPWInput.getText().toString());
+
+            }
+        });
+
+        //회원가입 버튼 눌렀을때 이벤트
+
+        loginActivitySignupBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent signUpActivityMoveIntent = new Intent(LoginActivity.this, SignUpActivity.class);
+                startActivity(signUpActivityMoveIntent);
+                finish();
+            }
+        });
+
         //카카오톡으로 시작하기 버튼을 눌렀을때 이벤트
 
         loginActivityKakaoBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Session session = Session.getCurrentSession();
-                LoginActivity.SessionCallback kakaoCallback = new LoginActivity.SessionCallback();
-                session.addCallback(kakaoCallback);
-                session.open(AuthType.KAKAO_ACCOUNT,LoginActivity.this);
+                    Session session = Session.getCurrentSession();
+                    LoginActivity.SessionCallback kakaoCallback = new LoginActivity.SessionCallback();
+                    session.addCallback(kakaoCallback);
+                    session.open(AuthType.KAKAO_ACCOUNT,LoginActivity.this);
             }
         });
 
@@ -442,8 +523,8 @@ public class LoginActivity extends AppCompatActivity {
         loginActivityNaverBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                setNaverLogin();
-                naverOAuthLoginModule.startOauthLoginActivity(LoginActivity.this,naverOAuthLoginHandler);
+                    setNaverLogin();
+                    naverOAuthLoginModule.startOauthLoginActivity(LoginActivity.this,naverOAuthLoginHandler);
             }
         });
 
@@ -478,8 +559,126 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
+    }
+    //로그인 성공했을때 DB에서 회원정보 가져와서 SharedPreference에 저장하는 AsyncTask
+
+    private class serviceLoginInfoDBSearch extends AsyncTask<String,Void,String>{
+
+        @SuppressLint("LongLogTag")
+        @Override
+        protected String doInBackground(String... strings) {
+
+            Connection pgConnection;
+            Statement pgStatement;
+            ResultSet pgResultSet;
+
+            String pgJDBCurl = "jdbc:postgresql://210.89.190.131/streetlive";
+            String pgUser = "postgres";
+            String pgPassword = "rmstnek123";
+            String sql;
+            String resultNickname;
+            String resultGender;
+            int resultBirth;
+
+            String userNickname = strings[0];
+
+            try {
+                pgConnection = DriverManager.getConnection(pgJDBCurl,pgUser,pgPassword);
+                pgStatement = pgConnection.createStatement();
+                sql = "select * from login.service_user where nickname = '"+userNickname+"';";
+                pgResultSet = pgStatement.executeQuery(sql);
+
+                while (pgResultSet.next()){
+                    resultNickname = pgResultSet.getString("nickname");
+//                    Log.e("serviceLoginInfoDBConfirm","일치하는정보 = "+result+"개");
+                    resultGender = pgResultSet.getString("gender");
+                    resultBirth = pgResultSet.getInt("birth");
+                    SharedPreferences resultInfoSave = getSharedPreferences("userLoginInfo",MODE_PRIVATE);
+                    SharedPreferences.Editor resultInfoSaveEditor = resultInfoSave.edit();
+                    resultInfoSaveEditor.putString("nickname",resultNickname);
+                    resultInfoSaveEditor.putString("gender",resultGender);
+                    resultInfoSaveEditor.putString("birth", String.valueOf(resultBirth));
+                    resultInfoSaveEditor.commit();
+                    Log.e("serviceLoginInfo",resultNickname);
+                    Log.e("serviceLoginInfo",resultGender);
+                    Log.e("serviceLoginInfo",resultBirth+"");
+
+                }
+
+                pgStatement.close();
+
+                return null;
+
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return null;
+            }
+
+        }
+    }
+
+    //로그인 시 회원정보 DB에 확인하는 AsyncTask
+    private class serviceLoginInfoDBConfirm extends AsyncTask<String, Void, String>{
 
 
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            if(!s.equals("0")){
+
+                serviceLoginInfoDBSearch serviceLoginInfoDBSearch = new serviceLoginInfoDBSearch();
+                serviceLoginInfoDBSearch.execute(loginActivityIDInput.getText().toString());
+
+                Toast.makeText(LoginActivity.this, "환영합니다.", Toast.LENGTH_SHORT).show();
+                Intent serviceLoginSuccess = new Intent(LoginActivity.this, MainActivity.class);
+                startActivity(serviceLoginSuccess);
+                finish();
+            } else {
+                Toast.makeText(LoginActivity.this, "아이디나 비밀번호가 맞지않습니다.", Toast.LENGTH_SHORT).show();
+                loginActivityIDInput.requestFocus();
+            }
+        }
+
+        @SuppressLint("LongLogTag")
+        @Override
+        protected String doInBackground(String... strings) {
+
+            Connection pgConnection;
+            Statement pgStatement;
+            ResultSet pgResultSet;
+
+            String pgJDBCurl = "jdbc:postgresql://210.89.190.131/streetlive";
+            String pgUser = "postgres";
+            String pgPassword = "rmstnek123";
+            String sql;
+            String result;
+
+            String userNickname = strings[0];
+            String userPwd = strings[1];
+
+            try {
+                pgConnection = DriverManager.getConnection(pgJDBCurl,pgUser,pgPassword);
+                pgStatement = pgConnection.createStatement();
+//                sql = "select count(*) from login.service_user where nickname = '"+userNickname+"';";
+                sql = "select count(*) from login.service_user where nickname = '"+userNickname+"' and pwd = '"+userPwd+"';";
+                pgResultSet = pgStatement.executeQuery(sql);
+
+                while (pgResultSet.next()){
+                    result = pgResultSet.getString("count");
+                    Log.e("serviceLoginInfoDBConfirm","일치하는정보 = "+result+"개");
+                    return result;
+                }
+
+                pgStatement.close();
+
+                return null;
+
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return null;
+            }
+
+        }
     }
 
 

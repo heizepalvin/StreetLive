@@ -1,3 +1,4 @@
+//noinspection GradleDependency
 apply plugin: 'com.android.application'
 
 android {
@@ -34,25 +35,24 @@ android {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
     //noinspection GradleCompatible
     implementation 'com.android.support:appcompat-v7:27.1.1'
     implementation 'com.android.support.constraint:constraint-layout:1.1.0'
     testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'com.android.support.test:runner:1.0.1'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
-
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
     //ButterKnife 추가
     implementation 'com.jakewharton:butterknife:8.8.1'
     annotationProcessor 'com.jakewharton:butterknife-compiler:8.8.1'
     //Typekit 추가 (폰트 라이브러리)
-    implementation  'com.github.katoro:typekit:1.0.1'
+    implementation 'com.github.katoro:typekit:1.0.1'
     //네이버 로그인 연동 라이브러리 추가
-    implementation ('com.naver.nid:naveridlogin-android-sdk:4.2.0')
+    implementation 'com.naver.nid:naveridlogin-android-sdk:4.2.0'
     implementation 'com.android.support:support-core-utils:27.1.1'
     implementation 'com.android.support:customtabs:27.1.1'
     implementation 'com.android.support:support-v4:27.1.1'
     //카카오톡 로그인 연동 SDK 추가
     implementation group: 'com.kakao.sdk', name: 'usermgmt', version: project.KAKAO_SDK_VERSION
-
+    implementation 'com.android.support:design:27.1.1'
 }

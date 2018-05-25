@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <tabs>
+
+        <tab
+            id="@+id/tab_live_log"
+            icon="@drawable/new_bottom"
+            title="Live"/>
+        <tab
+            id="@+id/tab_vod_log"
+            icon="@drawable/movie"
+            title="Vod" />
+        <tab
+            id="@+id/tab_menu_log"
+            icon="@drawable/list"
+            title="Menu" />
+
+    </tabs>
+</PreferenceScreen>

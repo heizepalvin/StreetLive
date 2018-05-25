@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/signup_background"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="70dp"
+        android:gravity="center"
+        android:text="@string/app_name_kor"
+        android:textColor="#fff"
+        android:textSize="20sp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_marginTop="25dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/textView6"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="@string/login_nickname"
+            android:textColor="#fff"
+            android:textSize="18sp" />
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="3">
+
+            <EditText
+                android:id="@+id/signUpActivityNicknameInput"
+                android:layout_width="220dp"
+                android:layout_height="match_parent"
+                android:layout_weight="3"
+                android:background="@null"
+                android:ems="10"
+                android:inputType="textPersonName"
+                android:maxLength="15"
+                android:textColor="#fff" />
+
+            <ImageView
+                android:id="@+id/signUpActivityNicknameUnderline"
+                android:layout_width="220dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                app:srcCompat="@drawable/login_textline_nonfocus" />
+        </FrameLayout>
+
+    </LinearLayout>
+
+
+    <TextView
+        android:id="@+id/signUpActivityNicknameCount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:paddingLeft="200dp"
+        android:text="@string/nickname_write_count"
+        android:textColor="#fff" />
+
+    <TextView
+        android:id="@+id/signUpActivityNicknameConfirmText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="@string/nickname_write"
+        android:textColor="#fff" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_marginTop="25dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="@string/login_pwd"
+            android:textColor="#fff"
+            android:textSize="18sp" />
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="3">
+
+            <EditText
+                android:id="@+id/signUpActivityPwdInput"
+                android:layout_width="220dp"
+                android:layout_height="match_parent"
+                android:layout_weight="3"
+                android:background="@android:color/transparent"
+                android:ems="10"
+                android:inputType="textPassword"
+                android:maxLength="20" />
+
+            <ImageView
+                android:id="@+id/signUpActivityPwdUnderline"
+                android:layout_width="220dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                app:srcCompat="@drawable/login_textline_nonfocus" />
+        </FrameLayout>
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/textView12"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="15dp"
+        android:gravity="center"
+        android:text="@string/pwd_write"
+        android:textColor="#fff" />
+
+    <LinearLayout
+        android:id="@+id/signUpActivityPwdUnderline"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_marginTop="25dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="@string/login_pwd2"
+            android:textColor="#fff"
+            android:textSize="18sp" />
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="3">
+
+            <EditText
+                android:id="@+id/signUpActivityPwd2Input"
+                android:layout_width="220dp"
+                android:layout_height="match_parent"
+                android:layout_weight="3"
+                android:background="@null"
+                android:ems="10"
+                android:inputType="textPassword"
+                android:maxLength="20"
+                android:textColor="#fff" />
+
+            <ImageView
+                android:id="@+id/signUpActivityPwd2Underline"
+                android:layout_width="220dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                app:srcCompat="@drawable/login_textline_nonfocus" />
+        </FrameLayout>
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/signUpActivityPwdConfirmText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="15dp"
+        android:gravity="center" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_marginTop="10dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/textView14"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="@string/gender_write"
+            android:textColor="#fff"
+            android:textSize="18sp" />
+
+        <RadioGroup
+            android:id="@+id/signUpActivityGenderGroup"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="3"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingRight="60dp">
+
+            <android.support.v7.widget.AppCompatRadioButton
+                android:id="@+id/signUpActivityManBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="50dp"
+                android:buttonTint="#FF0000"
+                android:text="@string/gender_man"
+                android:textColor="#fff" />
+
+            <android.support.v7.widget.AppCompatRadioButton
+                android:id="@+id/signUpActivityWomanBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:buttonTint="#ff0000"
+                android:text="@string/gender_woman"
+                android:textColor="#fff" />
+        </RadioGroup>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_marginTop="25dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="@string/birth_write"
+            android:textColor="#fff"
+            android:textSize="18sp" />
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="3">
+
+            <EditText
+                android:id="@+id/signUpActivityBirthInput"
+                android:layout_width="220dp"
+                android:layout_height="match_parent"
+                android:layout_weight="3"
+                android:background="@null"
+                android:ems="10"
+                android:inputType="number"
+                android:maxLength="8"
+                android:textColor="#fff" />
+
+            <ImageView
+                android:id="@+id/signUpActivityBirthUnderline"
+                android:layout_width="220dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                app:srcCompat="@drawable/login_textline_nonfocus" />
+        </FrameLayout>
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/signUpActivityBirthCheck"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="15dp"
+        android:gravity="center"
+        android:text="@string/birth_pick"
+        android:textColor="#fff" />
+
+    <Button
+        android:id="@+id/signUpActivityOkBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="25dp"
+        android:background="@android:color/black"
+        android:text="@string/com_kakao_ok_button"
+        android:textColor="#fff" />
+</LinearLayout>

@@ -1,6 +1,5 @@
 package com.example.heizepalvin.streetlive.mainFragment;
 
-import android.app.Fragment;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,7 +8,7 @@ import android.widget.LinearLayout;
 
 import com.example.heizepalvin.streetlive.R;
 
-public class VodFragmentActivity extends Fragment {
+public class VodFragmentActivity extends android.support.v4.app.Fragment {
 
     public VodFragmentActivity(){
 
@@ -22,7 +21,8 @@ public class VodFragmentActivity extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        LinearLayout vodFragmentLinear = (LinearLayout) inflater.inflate(R.layout.main_fragment_vod,container,false);
-        return vodFragmentLinear;
+        LinearLayout vodFragmentLayout = (LinearLayout) inflater.inflate(R.layout.main_fragment_vod,container,false);
+        return vodFragmentLayout;
+//        return inflater.inflate(R.layout.main_fragment_vod,container,false);
     }
 }

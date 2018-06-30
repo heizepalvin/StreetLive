@@ -2,6 +2,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.heizepalvin.streetlive">
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.FLASHLIGHT"/>
+    <uses-feature android:name="android.hardware.camera"/>
+    <uses-feature android:name="android.hardware.camera.autofocus"/>
     <application
         android:name=".login.kakao.GlobalApplication"
         android:allowBackup="true"
@@ -12,20 +18,30 @@
         android:theme="@style/AppTheme">
         <meta-data android:name="com.kakao.sdk.AppKey"
             android:value="@string/kakao_app_key"/>
-        <activity android:name=".MainActivity">
+        <activity android:name=".MainActivity"
+            android:screenOrientation="portrait">
         </activity>
-        <activity android:name=".IntroActivity">
+        <activity android:name=".IntroActivity"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".login.LoginActivity">
+        <activity android:name=".login.LoginActivity"
+            android:screenOrientation="portrait">
         </activity>
-        <activity android:name=".login.infoWriteActivity">
+        <activity android:name=".login.infoWriteActivity"
+            android:screenOrientation="portrait">
         </activity>
-        <activity android:name=".login.SignUpActivity">
+        <activity android:name=".login.SignUpActivity"
+            android:screenOrientation="portrait">
+        </activity>
+        <activity android:name=".mainFragment.LiveFragment.CreateLiveRoomActivity"
+            android:screenOrientation="portrait">
+        </activity>
+        <activity android:name=".mainFragment.LiveFragment.LiveRoomActivity">
         </activity>
     </application>
 

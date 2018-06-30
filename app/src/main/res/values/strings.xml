@@ -23,4 +23,5 @@
     <string name="gender_woman">여성</string>
     <string name="kakao_app_key">793e68accb7a7e8d9a2f3c0ca1c68cac</string>
     <string name="sign_up_id_hint">아이디를 입력해주세요.</string>
+
 </resources>

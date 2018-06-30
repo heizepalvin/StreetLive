@@ -707,18 +707,18 @@ public class LoginActivity extends AppCompatActivity {
 
     }
     //카카오톡 해시키 구하는 코드
-    private void getKakaoHashKey(){
-        try{
-            PackageInfo info = getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), PackageManager.GET_SIGNATURES);
-            for(android.content.pm.Signature signature : info.signatures){
-                MessageDigest md = MessageDigest.getInstance("SHA");
-                md.update(signature.toByteArray());
-                Log.e("getKakaoHashKey","key_hash="+ Base64.encodeToString(md.digest(),Base64.DEFAULT));
-            }
-        } catch (PackageManager.NameNotFoundException e){
-            e.printStackTrace();
-        }catch (NoSuchAlgorithmException e){
-            e.printStackTrace();
-        }
-    }
+//    private void getKakaoHashKey(){
+//        try{
+//            PackageInfo info = getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), PackageManager.GET_SIGNATURES);
+//            for(android.content.pm.Signature signature : info.signatures){
+//                MessageDigest md = MessageDigest.getInstance("SHA");
+//                md.update(signature.toByteArray());
+//                Log.e("getKakaoHashKey","key_hash="+ Base64.encodeToString(md.digest(),Base64.DEFAULT));
+//            }
+//        } catch (PackageManager.NameNotFoundException e){
+//            e.printStackTrace();
+//        }catch (NoSuchAlgorithmException e){
+//            e.printStackTrace();
+//        }
+//    }
 }

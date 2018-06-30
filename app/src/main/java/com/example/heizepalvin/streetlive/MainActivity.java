@@ -1,14 +1,20 @@
 package com.example.heizepalvin.streetlive;
 
-import android.app.Fragment;
 import android.content.Context;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.design.widget.BottomNavigationView;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
+import android.view.MenuItem;
 import android.widget.Toast;
 
+import com.example.heizepalvin.streetlive.mainFragment.LiveFragment.LiveFragmentActivity;
+import com.example.heizepalvin.streetlive.mainFragment.MenuFragmentActivity;
+import com.example.heizepalvin.streetlive.mainFragment.VodFragmentActivity;
 import com.tsengvn.typekit.TypekitContextWrapper;
 
 import butterknife.BindView;
@@ -16,10 +22,13 @@ import butterknife.ButterKnife;
 
 public class MainActivity extends AppCompatActivity {
 
-    Fragment liveFragmentActivity;
-
     @BindView(R.id.mainViewpager)
     ViewPager mainViewpager;
+    @BindView(R.id.mainBottomNavigation)
+    BottomNavigationView mainBottomNavigation;
+
+    private MenuItem prevBottomNavigation;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -29,21 +38,69 @@ public class MainActivity extends AppCompatActivity {
 //        SharedPreferences.Editor editor = remove.edit();
 //        editor.clear();
 //        editor.commit();
+        mainViewpager.setAdapter(new mainViewPagerAdapter(getSupportFragmentManager()));
+        mainViewpager.setCurrentItem(0);
+        mainBottomNavigation.setSelectedItemId(R.id.menu_live);
+        // 하단 메뉴 아이템 변경될 때 이벤트
+        mainBottomNavigation.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
+                switch (menuItem.getItemId()){
+                    case R.id.menu_live:
+                        mainViewpager.setCurrentItem(0);
+                        return true;
+                    case R.id.menu_vod:
+                        mainViewpager.setCurrentItem(1);
+                        return true;
+                    case R.id.menu_menu:
+                        mainViewpager.setCurrentItem(2);
+                        new MenuFragmentActivity();
+                        return true;
+                }
+                return false;
+            }
+        });
+        mainViewpager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int i, float v, int i1) {
 
-        liveFragmentActivity = new LiveFragmentActivity(R.layout.main_fragment_live);
+            }
+
+            @Override
+            public void onPageSelected(int i) {
+                // swap 될 때 해당 하단 메뉴 선택
+                if(prevBottomNavigation != null){
+                    prevBottomNavigation.setChecked(false);
+                }
+                prevBottomNavigation = mainBottomNavigation.getMenu().getItem(i);
+                prevBottomNavigation.setChecked(true);
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int i) {
+
+            }
+        });
 
     }
-    //ViewPager Adapter
-    private class mainViewpagerAdapter extends FragmentStatePagerAdapter{
+    private class mainViewPagerAdapter extends FragmentStatePagerAdapter {
 
-        public mainViewpagerAdapter(FragmentManager fm) {
+        public mainViewPagerAdapter(FragmentManager fm) {
             super(fm);
         }
 
         @Override
-        public android.support.v4.app.Fragment getItem(int position) {
-
-            return null;
+        public Fragment getItem(int i) {
+            switch (i){
+                case 0:
+                    return new LiveFragmentActivity();
+                case 1:
+                    return new VodFragmentActivity();
+                case 2:
+                    return new MenuFragmentActivity();
+                default:
+                    return null;
+            }
         }
 
         @Override

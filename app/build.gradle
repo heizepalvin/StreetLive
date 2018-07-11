@@ -67,4 +67,7 @@ dependencies {
     //Glide 라이브러리
     implementation 'com.github.bumptech.glide:glide:4.7.1'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.7.1'
+    //netty 라이브러리
+    implementation files('libs/netty-all-4.1.25.Final.jar')
+    implementation files('libs/netty-all-4.1.25.Final-sources.jar')
 }

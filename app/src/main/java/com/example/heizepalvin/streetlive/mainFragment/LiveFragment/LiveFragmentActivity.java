@@ -54,7 +54,6 @@ public class LiveFragmentActivity extends android.support.v4.app.Fragment implem
         liveListSwipe.setOnRefreshListener(this);
         liveListAdapter = new LiveListAdapter(getContext(),R.layout.live_fragment_list_item,liveListItems);
         liveList.setAdapter(liveListAdapter);
-        liveList.smoothScrollToPosition(0);
         fab = liveFragmentLayout.findViewById(R.id.liveFragmentBtn);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -67,19 +66,21 @@ public class LiveFragmentActivity extends android.support.v4.app.Fragment implem
         LiveRoomListGetToDB liveRoomListGetToDB = new LiveRoomListGetToDB();
         liveRoomListGetToDB.execute();
 
+        //리스트뷰를 클릭했을때 메소드
+        //리스트뷰 클릭하면 스트리밍키를 인텐트로 다음 액티비티에 넘겨줌
         liveList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if(position==0){
-                    Intent intent = new Intent(getContext(),LiveRoomActivity.class);
-                    startActivity(intent);
-                }
+                Intent liveRoomEnterIntent = new Intent(getContext(),LiveRoomActivity.class);
+                liveRoomEnterIntent.putExtra("key",liveListItems.get(position).getLiveKey());
+                startActivity(liveRoomEnterIntent);
             }
         });
 
         return liveFragmentLayout;
     }
 
+    //DB에서 생방송 중인 목록 가져오는 AsyncTask
     private class LiveRoomListGetToDB extends AsyncTask<String,Void,String>{
         @Override
         protected void onPostExecute(String s) {
@@ -123,7 +124,7 @@ public class LiveFragmentActivity extends android.support.v4.app.Fragment implem
             return null;
         }
     }
-
+    // 새로고침 메소드
     @Override
     public void onRefresh() {
         liveListItems.clear();
@@ -131,7 +132,7 @@ public class LiveFragmentActivity extends android.support.v4.app.Fragment implem
         liveRoomListGetToDB.execute();
         liveListSwipe.setRefreshing(false);
     }
-
+    //리스트뷰 어뎁터
     public class LiveListAdapter extends BaseAdapter{
 
         private ArrayList<LiveFragmentListItem> items;
@@ -149,7 +150,6 @@ public class LiveFragmentActivity extends android.support.v4.app.Fragment implem
             ImageView liveListItemImg;
             TextView liveListItemTitle;
             TextView liveListItemID;
-            TextView liveListItemGenre;
         }
 
         @Override

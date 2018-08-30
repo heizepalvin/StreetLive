@@ -18,7 +18,10 @@
             android:gravity="center"
             android:text="@string/login_id"
             android:textColor="#fff"
-            android:textSize="13sp" />
+            android:textSize="13sp"
+            android:ellipsize="marquee"
+            android:singleLine="true"
+            />
 
         <TextView
             android:id="@+id/ChatItemText"
@@ -28,6 +31,9 @@
             android:gravity="center"
             android:text="text"
             android:textColor="#0f0"
-            android:textSize="13sp" />
+            android:textSize="13sp"
+            android:ellipsize="marquee"
+            android:singleLine="true"
+            />
     </LinearLayout>
 </LinearLayout>

@@ -7,6 +7,7 @@ import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.content.res.AssetManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -16,9 +17,11 @@ import android.graphics.ImageFormat;
 import android.hardware.camera2.CameraManager;
 import android.media.MediaCodec;
 import android.media.MediaRecorder;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
@@ -64,6 +67,10 @@ import com.tsengvn.typekit.TypekitContextWrapper;
 
 import net.ossrs.rtmp.ConnectCheckerRtmp;
 
+import org.opencv.android.CameraBridgeViewBase;
+import org.opencv.android.JavaCameraView;
+import org.opencv.core.Mat;
+
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -96,10 +103,17 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.socket.SocketChannel;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 import static com.example.heizepalvin.streetlive.mainFragment.LiveFragment.LiveFragmentActivity.liveListItems;
 
-public class CreateLiveRoomActivity extends AppCompatActivity implements ConnectCheckerRtmp {
+public class CreateLiveRoomActivity extends AppCompatActivity implements ConnectCheckerRtmp,CameraBridgeViewBase.CvCameraViewListener2 {
 
     private static CameraPreview surfaceView;
     private SurfaceHolder createRoomHolder;
@@ -107,7 +121,8 @@ public class CreateLiveRoomActivity extends AppCompatActivity implements Connect
     private static android.hardware.Camera camera;
     private int RESULT_PERMISSIONS = 100;
     public static CreateLiveRoomActivity getCreatRoomActivityInstance;
-
+    private static JavaCameraView opencvCamera;
+    private redisPostDataSend redisPostDataSend = new redisPostDataSend();
     @BindView(R.id.previewFlashBtn)
     ImageButton previewFlashBtn;
     @BindView(R.id.previewBackBtn)
@@ -154,6 +169,7 @@ public class CreateLiveRoomActivity extends AppCompatActivity implements Connect
     private String userNickname;
     private String userGender;
     private String userStreamingKey;
+    private String liveThumnail;
 
     //Netty 채팅 서버 연결
 
@@ -170,7 +186,6 @@ public class CreateLiveRoomActivity extends AppCompatActivity implements Connect
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         //18/05/29
         getCreatRoomActivityInstance = this;
         requestPermissionCamera();
@@ -179,7 +194,23 @@ public class CreateLiveRoomActivity extends AppCompatActivity implements Connect
         chatItems = new ArrayList<>();
         chattingAdapter = new ChattingAdapter(getCreatRoomActivityInstance,R.layout.chatting_item,chatItems);
         previewChatLiveView.setAdapter(chattingAdapter);
+    }
 
+    @Override
+    public void onCameraViewStarted(int width, int height) {
+
+    }
+
+    @Override
+    public void onCameraViewStopped() {
+
+    }
+
+    @Override
+    public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
+
+        Log.e("?", "???");
+        return null;
     }
 
     private class SendmsgTask extends AsyncTask<String,Void,Void>{
@@ -305,8 +336,11 @@ public class CreateLiveRoomActivity extends AppCompatActivity implements Connect
 
         //18/05/29
         Log.e("onCreate",cameraFacing+"?");
-        surfaceView = new CameraPreview(getCreatRoomActivityInstance,cameraFacing);
-        setContentView(surfaceView);
+//        surfaceView = new CameraPreview(getCreatRoomActivityInstance,cameraFacing);
+        opencvCamera = new CameraPreview(getCreatRoomActivityInstance,cameraFacing);
+//        setContentView(surfaceView);
+        setContentView(opencvCamera);
+//        setContentView(R.layout.create_live_room_activity);
         addContentView(LayoutInflater.from(this).inflate(R.layout.create_live_room_activity,null), new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         ButterKnife.bind(this);
         SharedPreferences createLiveRoomTitle = getSharedPreferences("liveRoomTitle",MODE_PRIVATE);
@@ -314,12 +348,17 @@ public class CreateLiveRoomActivity extends AppCompatActivity implements Connect
         previewTitle = createLiveRoomTitle.getString("title",getLoginUserInfo.getString("nickname","")+"님의 방송입니다.");
         previewTitleText.setText(previewTitle);
         userNickname = getLoginUserInfo.getString("nickname","null");
-
+        opencvCamera.setVisibility(SurfaceView.VISIBLE);
+        opencvCamera.enableView();
         //18/06/04
 
+
         //18/06/11
-        rtmpCamera1 = new RtmpCamera1(surfaceView,getCreatRoomActivityInstance);
-        apiManager = new Camera1ApiManager(surfaceView,rtmpCamera1);
+//        rtmpCamera1 = new RtmpCamera1(surfaceView,getCreatRoomActivityInstance);
+        rtmpCamera1 = new RtmpCamera1(opencvCamera,getCreatRoomActivityInstance);
+//        apiManager = new Camera1ApiManager(surfaceView,rtmpCamera1);
+        apiManager = new Camera1ApiManager(opencvCamera,rtmpCamera1);
+
         previewCameraSwitchBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -327,6 +366,11 @@ public class CreateLiveRoomActivity extends AppCompatActivity implements Connect
                     apiManager.switchCamera();
                 } else {
                     rtmpCamera1.switchCamera();
+                }
+                if(cameraFacing == 0){
+                    cameraFacing = 1;
+                } else {
+                    cameraFacing = 0;
                 }
             }
         });
@@ -493,13 +537,16 @@ public class CreateLiveRoomActivity extends AppCompatActivity implements Connect
             @Override
             public void onClick(View v) {
                 if(rtmpCamera1.isStreaming()){
+                    //방송종료
+                    redisPostDataSend.execute("CreateLiveRoomActivity","LiveStreamingStop");
+
                     rtmpCamera1.stopStream();
                     receiveBoolean = false;
                     Toast.makeText(CreateLiveRoomActivity.this, "방송을 종료합니다.", Toast.LENGTH_SHORT).show();
                     previewRotationBtn.setVisibility(View.VISIBLE);
                     previewBackBtn.setVisibility(View.VISIBLE);
                     LiveRoomRemoveToDB liveRoomRemoveToDB = new LiveRoomRemoveToDB();
-                    liveRoomRemoveToDB.execute(userStreamingKey);
+                    liveRoomRemoveToDB.execute(userStreamingKey,"false");
 //                    Log.e("쓰레드",checkUpdate.isInterrupted()+"");
                     try {
 //                        checkUpdate.sleep(1000);
@@ -515,8 +562,33 @@ public class CreateLiveRoomActivity extends AppCompatActivity implements Connect
                         e.printStackTrace();
                     }
                     previewStartBtn.setImageResource(R.drawable.play);
+                    // vod로 방송을 남길 것 인지 스트리머에게 물어봄
+                    AlertDialog.Builder builder = new AlertDialog.Builder(CreateLiveRoomActivity.this);
+                    builder.setTitle("StreetLive");
+                    builder.setMessage("방송을 업로드 하시겠습니까?");
+                    builder.setNegativeButton("업로드", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            //DB에 방송한 URL,닉네임, 방송제목 저장
+                            String liveBroadCastUrl = "http://210.89.190.131/dash/streetlive-"+userStreamingKey+".flv";
+                            LiveBroadCastSaveToVodDB liveBroadCastSaveToVodDB = new LiveBroadCastSaveToVodDB();
+                            liveBroadCastSaveToVodDB.execute(userNickname,previewTitleText.getText().toString(),liveBroadCastUrl,liveThumnail);
+                        }
+                    });
+                    builder.setPositiveButton("종료", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            liveRoomRemoveToDB.execute(userStreamingKey,"true");
+                            finish();
+                        }
+                    });
+                    builder.setCancelable(false);
+                    builder.show();
+
                 } else {
                     // 스트리밍 시작
+                    redisPostDataSend.execute("CreateLiveRoomActivity","LiveStreamingStart");
+
                     chatItems.clear();
                     chattingAdapter.notifyDataSetChanged();
                     previewStartBtn.setImageResource(R.drawable.stop);
@@ -530,7 +602,7 @@ public class CreateLiveRoomActivity extends AppCompatActivity implements Connect
                     RandomCreateStreamingKey();
                     // 리스트뷰에 생방송 리스트 추가
                     Log.e("여기 안감?","asdf");
-                    String liveThumnail = "http://210.89.190.131/dash/streetlive-"+userStreamingKey+".png";
+                    liveThumnail = "http://210.89.190.131/dash/streetlive-"+userStreamingKey+".png";
                     LiveRoomAddToDB liveRoomSaveDB = new LiveRoomAddToDB();
                     liveRoomSaveDB.execute(previewTitleText.getText().toString(),userNickname,userStreamingKey,liveThumnail);
                     //채팅서버 연결
@@ -551,7 +623,6 @@ public class CreateLiveRoomActivity extends AppCompatActivity implements Connect
                             }catch (Exception e){
                                 e.printStackTrace();
                             }
-
                         }
                     }).start();
 
@@ -575,6 +646,50 @@ public class CreateLiveRoomActivity extends AppCompatActivity implements Connect
                 }
             }
         });
+    }
+
+    // 라이브 방송한 데이터 vod 데이터베이스에 저장하는 AsyncTask
+    private class LiveBroadCastSaveToVodDB extends AsyncTask<String,Void,String>{
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            Toast.makeText(CreateLiveRoomActivity.this, "업로드가 완료되었습니다.", Toast.LENGTH_SHORT).show();
+            finish();
+        }
+
+        @Override
+        protected String doInBackground(String... strings) {
+
+            Connection pgConnection;
+            Statement pgStatement;
+            int pgResult;
+
+            String pgJDBCurl = "jdbc:postgresql://210.89.190.131/streetlive";
+            String pgUser = "postgres";
+            String pgPassword = "rmstnek123";
+            String sql;
+
+            String liveBroadCastNickname = strings[0];
+            String liveBroadCastTitle = strings[1];
+            String liveBroadCastUrl = strings[2];
+            String liveBroadCastThumnail = strings[3];
+
+            try{
+                pgConnection = DriverManager.getConnection(pgJDBCurl,pgUser,pgPassword);
+                pgStatement = pgConnection.createStatement();
+                sql = "insert into vod.list (nickname,title,url,thumnail) values('"
+                        +liveBroadCastNickname+"','"+liveBroadCastTitle+"','"+liveBroadCastUrl+"','"+liveBroadCastThumnail+"');";
+                pgResult = pgStatement.executeUpdate(sql);
+                if(pgResult!=0){
+                    Log.e("liveBroadCastToVodDB","Success!");
+                    pgStatement.close();
+                }
+            }catch (Exception e){
+                Log.e("liveBroadCastToVodDB",e.toString());
+            }
+
+            return null;
+        }
     }
 
     private void RandomCreateStreamingKey(){
@@ -640,6 +755,7 @@ public class CreateLiveRoomActivity extends AppCompatActivity implements Connect
             String sql;
 
             String liveRoomkey = strings[0];
+            String vodAndThumnailRemove = strings[1];
 
 
             // 서버 썸네일 삭제
@@ -647,51 +763,57 @@ public class CreateLiveRoomActivity extends AppCompatActivity implements Connect
             String serverURL = "http://210.89.190.131/rmImage.php";
             String postParameters = "key="+liveRoomkey;
 
+            if(vodAndThumnailRemove.equals("false")){
+                try{
+                    pgConnection = DriverManager.getConnection(pgJDBCurl,pgUser,pgPassword);
+                    pgStatement = pgConnection.createStatement();
+                    sql = "delete from live.room_info where key = '"+liveRoomkey+"';";
+                    pgResult = pgStatement.executeUpdate(sql);
+                    if(pgResult!=0){
+                        Log.e("LiveRoomRemoveToDB","SuccessRemove");
+                        pgStatement.close();
+                    }
+                }catch (Exception e){
+                    Log.e("LiveRoomRemoveToDB",e.toString());
+                }
+            } else {
+                try{
+                    URL url = new URL(serverURL);
+                    HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
 
-            try{
-                pgConnection = DriverManager.getConnection(pgJDBCurl,pgUser,pgPassword);
-                pgStatement = pgConnection.createStatement();
-                sql = "delete from live.room_info where key = '"+liveRoomkey+"';";
-                pgResult = pgStatement.executeUpdate(sql);
-                if(pgResult!=0){
-                    Log.e("LiveRoomRemoveToDB","SuccessRemove");
-                    pgStatement.close();
+                    httpURLConnection.setReadTimeout(5000);
+                    httpURLConnection.setConnectTimeout(5000);
+                    httpURLConnection.setRequestMethod("POST");
+                    httpURLConnection.connect();
+
+                    OutputStream outputStream = httpURLConnection.getOutputStream();
+                    outputStream.write(postParameters.getBytes("UTF-8"));
+                    outputStream.flush();
+                    outputStream.close();
+
+                    int responseStatusCode = httpURLConnection.getResponseCode();
+                    InputStream inputStream;
+                    if(responseStatusCode==HttpURLConnection.HTTP_OK){
+                        inputStream = httpURLConnection.getInputStream();
+                    } else {
+                        inputStream = httpURLConnection.getErrorStream();
+                    }
+
+                    InputStreamReader inputStreamReader = new InputStreamReader(inputStream, "UTF-8");
+                    BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+
+                    StringBuilder sb = new StringBuilder();
+                    String line = null;
+
+                    while((line=bufferedReader.readLine())!= null){
+                        sb.append(line);
+                    }
+                    bufferedReader.close();
+
+                }catch (Exception e){
+                    Log.e("LiveRoomRemoveToDB",e.toString());
                 }
 
-                URL url = new URL(serverURL);
-                HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
-
-                httpURLConnection.setReadTimeout(5000);
-                httpURLConnection.setConnectTimeout(5000);
-                httpURLConnection.setRequestMethod("POST");
-                httpURLConnection.connect();
-
-                OutputStream outputStream = httpURLConnection.getOutputStream();
-                outputStream.write(postParameters.getBytes("UTF-8"));
-                outputStream.flush();
-                outputStream.close();
-
-                int responseStatusCode = httpURLConnection.getResponseCode();
-                InputStream inputStream;
-                if(responseStatusCode==HttpURLConnection.HTTP_OK){
-                    inputStream = httpURLConnection.getInputStream();
-                } else {
-                    inputStream = httpURLConnection.getErrorStream();
-                }
-
-                InputStreamReader inputStreamReader = new InputStreamReader(inputStream, "UTF-8");
-                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-
-                StringBuilder sb = new StringBuilder();
-                String line = null;
-
-                while((line=bufferedReader.readLine())!= null){
-                    sb.append(line);
-                }
-                bufferedReader.close();
-
-            }catch (Exception e){
-                Log.e("LiveRoomRemoveToDB",e.toString());
             }
             return null;
         }
@@ -733,6 +855,7 @@ public class CreateLiveRoomActivity extends AppCompatActivity implements Connect
             return null;
         }
     }
+
 
     @Override
     public void onConnectionSuccessRtmp() {
@@ -789,10 +912,10 @@ public class CreateLiveRoomActivity extends AppCompatActivity implements Connect
     }
 
 
-    public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback{
+    public class CameraPreview extends JavaCameraView implements SurfaceHolder.Callback{
 
         public CameraPreview(Context context, int cameraFacings) {
-            super(context);
+            super(context,cameraFacings);
             createRoomHolder = getHolder();
             createRoomHolder.addCallback(this);
             createRoomHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
@@ -809,7 +932,6 @@ public class CreateLiveRoomActivity extends AppCompatActivity implements Connect
             Log.e("surfaceChanged",cameraFacing+"");
 //            camera.startPreview();
             rtmpCamera1.startPreview(1920,1080);
-
         }
 
         @Override
@@ -959,7 +1081,53 @@ public class CreateLiveRoomActivity extends AppCompatActivity implements Connect
     @Override
     protected void onResume() {
         super.onResume();
+
+        redisPostDataSend.execute("CreateLiveRoomActivity","ActivityIn");
+
     }
+    //okhttp3
+    private final OkHttpClient okHttpClient = new OkHttpClient();
+    public class redisPostDataSend extends AsyncTask<String,Void,String>{
+
+        @Override
+        protected String doInBackground(String... strings) {
+
+            String viewSendMsg = strings[0];
+            String actionSendMsg = strings[1];
+
+            //POST 요청 시
+            SharedPreferences userLoginInfo = getSharedPreferences("userLoginInfo",MODE_PRIVATE);
+            String userNickname = userLoginInfo.getString("nickname","null");
+            Log.e("닉네임가져오기",userNickname);
+            RequestBody formbody = new FormBody.Builder()
+                    .add("ID",userNickname)
+                    .add("View",viewSendMsg)
+                    .add("Action",actionSendMsg)
+                    .build();
+
+            Request request = new Request.Builder()
+                    .url("http://106.10.43.183:80")
+                    .post(formbody)
+                    .build();
+
+            okHttpClient.newCall(request).enqueue(redisResponseCallback);
+
+            return null;
+        }
+    }
+    private Callback redisResponseCallback = new Callback() {
+        @Override
+        public void onFailure(Call call, IOException e) {
+            Log.e("MainActivityRedis","error Message : "+ e.getMessage());
+        }
+
+
+        @Override
+        public void onResponse(Call call, Response response) throws IOException {
+            final String responseData = response.body().string();
+            Log.e("MainActivityRedis","responseData : " + responseData);
+        }
+    };
 
     // Typekit 라이브러리 (폰트 적용)를 사용하기 위해 만든 메소드
     @Override

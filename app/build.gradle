@@ -10,6 +10,9 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        ndk {
+//            abiFilters 'armeabi-v7a'
+        }
     }
     buildTypes {
         release {
@@ -17,12 +20,28 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    //unity
+    lintOptions {
+        abortOnError false
+    }
+
+    aaptOptions {
+        noCompress '.unity3d', '.ress', '.resource', '.obb', 'vuforia/sticker.dat', 'vuforia/sticker.xml'
+    }
+
+
+    externalNativeBuild{
+        ndkBuild{
+            path 'src/main/jni/Android.mk'
+        }
+    }
+
     //JDBC 때문에 소스코드의 레벨을 Java 8 으로 설정
     compileOptions{
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-//    packagingOptions{
+    packagingOptions{
 //        exclude 'META-INF/DEPENDENCIES'
 //        exclude 'META-INF/LICENSE'
 //        exclude 'META-INF/LICENSE.txt'
@@ -31,7 +50,8 @@ android {
 //        exclude 'META-INF/NOTICE.txt'
 //        exclude 'META-INF/notice.txt'
 //        exclude 'META-INF/ASL2.0'
-//    }
+        doNotStrip '*/armeabi-v7a/*.so'
+    }
 }
 
 dependencies {
@@ -67,7 +87,13 @@ dependencies {
     //Glide 라이브러리
     implementation 'com.github.bumptech.glide:glide:4.7.1'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.7.1'
+    implementation 'jp.wasabeef:glide-transformations:3.3.0'
     //netty 라이브러리
     implementation files('libs/netty-all-4.1.25.Final.jar')
     implementation files('libs/netty-all-4.1.25.Final-sources.jar')
+    implementation project(':openCVLibrary342')
+    implementation 'com.android.support:design:27.1.1'
+    implementation files('libs/unity-classes.jar')
+    //okhttp 라이브러리
+    implementation 'com.squareup.okhttp3:okhttp:3.11.0'
 }

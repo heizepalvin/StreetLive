@@ -27,6 +27,9 @@ import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
+import com.google.android.exoplayer2.source.ExtractorMediaSource;
+import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.dash.DashMediaSource;
 import com.google.android.exoplayer2.source.dash.DefaultDashChunkSource;
 import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
@@ -49,6 +52,13 @@ import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class LiveRoomActivity extends AppCompatActivity{
 
@@ -74,6 +84,7 @@ public class LiveRoomActivity extends AppCompatActivity{
 
     //LiveFragmentActivity에서 넘겨받은 스트리밍 키
     private String streamingKey;
+    private String streamingTitle;
 
     private DefaultBandwidthMeter defaultBandwidthMeter = new DefaultBandwidthMeter();
     private DefaultTrackSelector trackSelector;
@@ -90,15 +101,6 @@ public class LiveRoomActivity extends AppCompatActivity{
     private String userNickname;
     private ArrayList<ChattingItem> chatItems;
     private ChattingAdapter chattingAdapter;
-
-    @Override
-    public void onWindowFocusChanged(boolean hasFocus) {
-        super.onWindowFocusChanged(hasFocus);
-
-        Log.e("width?",livePlayerView.getWidth()+"");
-        Log.e("height?",livePlayerView.getHeight()+"");
-
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -295,6 +297,7 @@ public class LiveRoomActivity extends AppCompatActivity{
         if(livePlayer == null){
             Intent getStreamingKeyIntent = getIntent();
             streamingKey = getStreamingKeyIntent.getStringExtra("key");
+            streamingTitle = getStreamingKeyIntent.getStringExtra("title");
             Log.e("streamingkey?",streamingKey);
 
             TrackSelection.Factory trackSelectionFactory = new AdaptiveTrackSelection.Factory(defaultBandwidthMeter);
@@ -315,6 +318,11 @@ public class LiveRoomActivity extends AppCompatActivity{
             DashMediaSource dashMediaSource = new DashMediaSource(liveUri,dataSourceFactory,
                     new DefaultDashChunkSource.Factory(dataSourceFactory),null,null);
             livePlayer.prepare(dashMediaSource);
+//            Uri liveUri = Uri.parse("http://210.89.190.131/dash/streetlive-9f190q82vu.flv");
+//            ExtractorMediaSource extractorMediaSource = new ExtractorMediaSource(liveUri,dataSourceFactory,new DefaultExtractorsFactory(),null,null);
+//            livePlayer.prepare(extractorMediaSource);
+            redisPostDataSend redisPostDataSend = new redisPostDataSend();
+            redisPostDataSend.execute("LiveRoomActivity","WatchLiveStreaming:"+streamingTitle);
         }
 
     }
@@ -349,6 +357,48 @@ public class LiveRoomActivity extends AppCompatActivity{
             }
         }
     }
+    //okhttp3
+    private final OkHttpClient okHttpClient = new OkHttpClient();
+    public class redisPostDataSend extends AsyncTask<String,Void,String> {
 
+        @Override
+        protected String doInBackground(String... strings) {
+
+            String viewSendMsg = strings[0];
+            String actionSendMsg = strings[1];
+
+            //POST 요청 시
+            SharedPreferences userLoginInfo = getSharedPreferences("userLoginInfo",MODE_PRIVATE);
+            String userNickname = userLoginInfo.getString("nickname","null");
+            Log.e("닉네임가져오기",userNickname);
+            RequestBody formbody = new FormBody.Builder()
+                    .add("ID",userNickname)
+                    .add("View",viewSendMsg)
+                    .add("Action",actionSendMsg)
+                    .build();
+
+            Request request = new Request.Builder()
+                    .url("http://106.10.43.183:80")
+                    .post(formbody)
+                    .build();
+
+            okHttpClient.newCall(request).enqueue(redisResponseCallback);
+
+            return null;
+        }
+    }
+    private Callback redisResponseCallback = new Callback() {
+        @Override
+        public void onFailure(Call call, IOException e) {
+            Log.e("MainActivityRedis","error Message : "+ e.getMessage());
+        }
+
+
+        @Override
+        public void onResponse(Call call, Response response) throws IOException {
+            final String responseData = response.body().string();
+            Log.e("MainActivityRedis","responseData : " + responseData);
+        }
+    };
 }
 

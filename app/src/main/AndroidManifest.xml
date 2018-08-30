@@ -46,6 +46,9 @@
         <activity android:name=".mainFragment.LiveFragment.LiveRoomActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|uiMode">
         </activity>
+        <activity android:name=".mainFragment.VodFragment.VodRoomActivity">
+        </activity>
+        <activity android:name=".UnityPlayerActivity"/>
     </application>
 
 </manifest>

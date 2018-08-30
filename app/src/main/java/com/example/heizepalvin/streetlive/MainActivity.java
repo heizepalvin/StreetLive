@@ -1,6 +1,8 @@
 package com.example.heizepalvin.streetlive;
 
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
@@ -9,16 +11,27 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.example.heizepalvin.streetlive.mainFragment.LiveFragment.LiveFragmentActivity;
 import com.example.heizepalvin.streetlive.mainFragment.MenuFragmentActivity;
-import com.example.heizepalvin.streetlive.mainFragment.VodFragmentActivity;
+import com.example.heizepalvin.streetlive.mainFragment.VodFragment.VodFragmentActivity;
 import com.tsengvn.typekit.TypekitContextWrapper;
+
+import java.io.IOException;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -29,6 +42,9 @@ public class MainActivity extends AppCompatActivity {
 
     private MenuItem prevBottomNavigation;
 
+    //okhttp3
+    private final OkHttpClient okHttpClient = new OkHttpClient();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,6 +54,12 @@ public class MainActivity extends AppCompatActivity {
 //        SharedPreferences.Editor editor = remove.edit();
 //        editor.clear();
 //        editor.commit();
+
+        //redis 테스트
+
+        redisPostDataSend redisPostDataSend = new redisPostDataSend();
+        redisPostDataSend.execute();
+
         mainViewpager.setAdapter(new mainViewPagerAdapter(getSupportFragmentManager()));
         mainViewpager.setCurrentItem(0);
         mainBottomNavigation.setSelectedItemId(R.id.menu_live);
@@ -133,4 +155,46 @@ public class MainActivity extends AppCompatActivity {
     protected void attachBaseContext(Context newBase) {
         super.attachBaseContext(TypekitContextWrapper.wrap(newBase));
     }
+
+    //okhttp를 이용해서 서버로 POST 데이터를 보냄
+
+    public class redisPostDataSend extends AsyncTask<String,Void,String>{
+
+        @Override
+        protected String doInBackground(String... strings) {
+
+            //POST 요청 시
+            SharedPreferences userLoginInfo = getSharedPreferences("userLoginInfo",MODE_PRIVATE);
+            String userNickname = userLoginInfo.getString("nickname","null");
+            Log.e("닉네임가져오기",userNickname);
+            RequestBody formbody = new FormBody.Builder()
+                    .add("ID",userNickname)
+                    .add("View","MainActivity")
+                    .add("Action","ActivityIn")
+                    .build();
+
+            Request request = new Request.Builder()
+                    .url("http://106.10.43.183:80")
+                    .post(formbody)
+                    .build();
+
+            okHttpClient.newCall(request).enqueue(redisResponseCallback);
+
+            return null;
+        }
+    }
+
+    private Callback redisResponseCallback = new Callback() {
+        @Override
+        public void onFailure(Call call, IOException e) {
+            Log.e("MainActivityRedis","error Message : "+ e.getMessage());
+        }
+
+
+        @Override
+        public void onResponse(Call call, Response response) throws IOException {
+            final String responseData = response.body().string();
+            Log.e("MainActivityRedis","responseData : " + responseData);
+        }
+    };
 }

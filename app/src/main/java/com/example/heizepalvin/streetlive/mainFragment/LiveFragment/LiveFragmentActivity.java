@@ -73,6 +73,7 @@ public class LiveFragmentActivity extends android.support.v4.app.Fragment implem
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Intent liveRoomEnterIntent = new Intent(getContext(),LiveRoomActivity.class);
                 liveRoomEnterIntent.putExtra("key",liveListItems.get(position).getLiveKey());
+                liveRoomEnterIntent.putExtra("title",liveListItems.get(position).getLiveTitle());
                 startActivity(liveRoomEnterIntent);
             }
         });

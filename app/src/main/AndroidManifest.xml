@@ -49,6 +49,8 @@
         <activity android:name=".mainFragment.VodFragment.VodRoomActivity">
         </activity>
         <activity android:name=".UnityPlayerActivity"/>
+        <activity android:name=".CashPaymentActivity"/>
+        <activity android:name=".KakaoPaymentWebViewActivity"/>
     </application>
 
 </manifest>

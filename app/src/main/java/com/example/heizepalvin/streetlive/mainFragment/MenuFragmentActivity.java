@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.Toolbar;
 
+import com.example.heizepalvin.streetlive.CashPaymentActivity;
 import com.example.heizepalvin.streetlive.R;
 import com.example.heizepalvin.streetlive.UnityPlayerActivity;
 
@@ -29,12 +30,20 @@ public class MenuFragmentActivity extends android.support.v4.app.Fragment {
         CoordinatorLayout menuFragmentLayout = (CoordinatorLayout) inflater.inflate(R.layout.main_fragment_menu,container,false);
 //        NestedScrollView menuFragmentLayoutAdd = (NestedScrollView) inflater.inflate(R.layout.main_fragment_menu_add,container,false);
         LinearLayout menuFragmentARBtn = menuFragmentLayout.findViewById(R.id.mainFragmentARBtn);
-
+        LinearLayout menuFragmentCashBtn = menuFragmentLayout.findViewById(R.id.mainFragmentCashBtn);
         menuFragmentARBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getContext(), UnityPlayerActivity.class);
-                startActivity(intent);
+                Intent ARActivityMoveIntent = new Intent(getContext(), UnityPlayerActivity.class);
+                startActivity(ARActivityMoveIntent);
+            }
+        });
+
+        menuFragmentCashBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent cashActivityMoveIntent = new Intent(getContext(), CashPaymentActivity.class);
+                startActivity(cashActivityMoveIntent);
             }
         });
 

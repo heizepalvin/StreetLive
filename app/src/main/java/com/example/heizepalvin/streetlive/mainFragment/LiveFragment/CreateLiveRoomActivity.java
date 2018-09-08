@@ -122,7 +122,7 @@ public class CreateLiveRoomActivity extends AppCompatActivity implements Connect
     private int RESULT_PERMISSIONS = 100;
     public static CreateLiveRoomActivity getCreatRoomActivityInstance;
     private static JavaCameraView opencvCamera;
-    private redisPostDataSend redisPostDataSend = new redisPostDataSend();
+
     @BindView(R.id.previewFlashBtn)
     ImageButton previewFlashBtn;
     @BindView(R.id.previewBackBtn)
@@ -352,6 +352,8 @@ public class CreateLiveRoomActivity extends AppCompatActivity implements Connect
         opencvCamera.enableView();
         //18/06/04
 
+        redisPostDataSend redisPostDataSend = new redisPostDataSend();
+        redisPostDataSend.execute("CreateLiveRoomActivity","ActivityIn");
 
         //18/06/11
 //        rtmpCamera1 = new RtmpCamera1(surfaceView,getCreatRoomActivityInstance);
@@ -538,8 +540,8 @@ public class CreateLiveRoomActivity extends AppCompatActivity implements Connect
             public void onClick(View v) {
                 if(rtmpCamera1.isStreaming()){
                     //방송종료
+                    redisPostDataSend redisPostDataSend = new redisPostDataSend();
                     redisPostDataSend.execute("CreateLiveRoomActivity","LiveStreamingStop");
-
                     rtmpCamera1.stopStream();
                     receiveBoolean = false;
                     Toast.makeText(CreateLiveRoomActivity.this, "방송을 종료합니다.", Toast.LENGTH_SHORT).show();
@@ -578,6 +580,7 @@ public class CreateLiveRoomActivity extends AppCompatActivity implements Connect
                     builder.setPositiveButton("종료", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
+                            LiveRoomRemoveToDB liveRoomRemoveToDB = new LiveRoomRemoveToDB();
                             liveRoomRemoveToDB.execute(userStreamingKey,"true");
                             finish();
                         }
@@ -587,6 +590,7 @@ public class CreateLiveRoomActivity extends AppCompatActivity implements Connect
 
                 } else {
                     // 스트리밍 시작
+                    redisPostDataSend redisPostDataSend = new redisPostDataSend();
                     redisPostDataSend.execute("CreateLiveRoomActivity","LiveStreamingStart");
 
                     chatItems.clear();
@@ -1082,7 +1086,7 @@ public class CreateLiveRoomActivity extends AppCompatActivity implements Connect
     protected void onResume() {
         super.onResume();
 
-        redisPostDataSend.execute("CreateLiveRoomActivity","ActivityIn");
+//        redisPostDataSend.execute("CreateLiveRoomActivity","ActivityIn");
 
     }
     //okhttp3

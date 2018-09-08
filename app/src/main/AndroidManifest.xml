@@ -51,6 +51,7 @@
         <activity android:name=".UnityPlayerActivity"/>
         <activity android:name=".CashPaymentActivity"/>
         <activity android:name=".KakaoPaymentWebViewActivity"/>
+        <activity android:name=".CashPaymentEndingActivity"/>
     </application>
 
 </manifest>

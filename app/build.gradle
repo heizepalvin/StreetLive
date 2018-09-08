@@ -96,4 +96,6 @@ dependencies {
     implementation files('libs/unity-classes.jar')
     //okhttp 라이브러리
     implementation 'com.squareup.okhttp3:okhttp:3.11.0'
+    //lottie 라이브러리
+    implementation 'com.airbnb.android:lottie:2.6.1'
 }

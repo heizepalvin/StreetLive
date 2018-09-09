@@ -247,6 +247,7 @@ public class LoginActivity extends AppCompatActivity {
                 saveUserInfoEditor.putString("nickname",resultNickname);
                 saveUserInfoEditor.putString("gender",resultGender);
                 saveUserInfoEditor.putString("birth",resultBirth);
+                saveUserInfoEditor.putString("service","naver");
                 saveUserInfoEditor.commit();
 
                 Toast.makeText(LoginActivity.this, "환영합니다!", Toast.LENGTH_SHORT).show();
@@ -399,6 +400,7 @@ public class LoginActivity extends AppCompatActivity {
                 saveUserInfoEditor.putString("nickname",resultNickname);
                 saveUserInfoEditor.putString("gender",resultGender);
                 saveUserInfoEditor.putString("birth",resultBirth);
+                saveUserInfoEditor.putString("service","kakao");
                 saveUserInfoEditor.commit();
                 Toast.makeText(LoginActivity.this,"환영합니다!", Toast.LENGTH_SHORT).show();
                 Intent kakaoLoginUserMainMoveIntent = new Intent(LoginActivity.this,MainActivity.class);
@@ -587,23 +589,24 @@ public class LoginActivity extends AppCompatActivity {
                 pgStatement = pgConnection.createStatement();
                 sql = "select * from login.service_user where nickname = '"+userNickname+"';";
                 pgResultSet = pgStatement.executeQuery(sql);
+                SharedPreferences resultInfoSave = getSharedPreferences("userLoginInfo",MODE_PRIVATE);
+                SharedPreferences.Editor resultInfoSaveEditor = resultInfoSave.edit();
 
                 while (pgResultSet.next()){
                     resultNickname = pgResultSet.getString("nickname");
 //                    Log.e("serviceLoginInfoDBConfirm","일치하는정보 = "+result+"개");
                     resultGender = pgResultSet.getString("gender");
                     resultBirth = pgResultSet.getInt("birth");
-                    SharedPreferences resultInfoSave = getSharedPreferences("userLoginInfo",MODE_PRIVATE);
-                    SharedPreferences.Editor resultInfoSaveEditor = resultInfoSave.edit();
                     resultInfoSaveEditor.putString("nickname",resultNickname);
                     resultInfoSaveEditor.putString("gender",resultGender);
                     resultInfoSaveEditor.putString("birth", String.valueOf(resultBirth));
-                    resultInfoSaveEditor.commit();
                     Log.e("serviceLoginInfo",resultNickname);
                     Log.e("serviceLoginInfo",resultGender);
                     Log.e("serviceLoginInfo",resultBirth+"");
 
                 }
+                resultInfoSaveEditor.putString("service","service");
+                resultInfoSaveEditor.commit();
 
                 pgStatement.close();
 
@@ -631,6 +634,7 @@ public class LoginActivity extends AppCompatActivity {
 
                 Toast.makeText(LoginActivity.this, "환영합니다.", Toast.LENGTH_SHORT).show();
                 Intent serviceLoginSuccess = new Intent(LoginActivity.this, MainActivity.class);
+                serviceLoginSuccess.putExtra("service","service");
                 startActivity(serviceLoginSuccess);
                 finish();
             } else {

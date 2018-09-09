@@ -37,6 +37,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.ArrayList;
 
 import butterknife.BindView;
@@ -68,6 +72,7 @@ public class CashPaymentActivity extends AppCompatActivity {
     private String userSelectPrice;
     private String userNickname;
     private String nextRedirectAppUrl;
+    private String userLoginServiceInfo;
 
     private SharedPreferences sharedPreferences;
 
@@ -78,6 +83,11 @@ public class CashPaymentActivity extends AppCompatActivity {
         ButterKnife.bind(this);
         sharedPreferences = getSharedPreferences("userLoginInfo",MODE_PRIVATE);
         userNickname = sharedPreferences.getString("nickname","null");
+        userLoginServiceInfo = sharedPreferences.getString("service","null");
+        Log.e("userLoginServiceInfo?",userLoginServiceInfo);
+        //사용자 별풍선 정보를 가져옴
+        userBalloonsGetToDB userBalloonsGetToDB = new userBalloonsGetToDB();
+        userBalloonsGetToDB.execute();
 
         paymentSpinner_items = new ArrayList();
 
@@ -126,8 +136,7 @@ public class CashPaymentActivity extends AppCompatActivity {
                 .apply(RequestOptions.bitmapTransform(new RoundedCorners(100)))
                 .into(paymentKakaoBtn);
 
-        kakaopayPaymentRequest kakaopayPaymentRequest = new kakaopayPaymentRequest();
-
+        //카카오페이 버튼 클릭 이벤트
         paymentKakaoBtn.setOnClickListener(v -> {
             if(paymentCashEditText.getVisibility() == View.VISIBLE){
                 //카카오페이 버튼 클릭시 사용자가 직접 금액을 입력했을때 예외처리
@@ -140,6 +149,7 @@ public class CashPaymentActivity extends AppCompatActivity {
                         Toast.makeText(this, "한번에 1000원이상 100만원이하만 충전 가능합니다.", Toast.LENGTH_SHORT).show();
                     } else {
                         userSelectPrice = paymentCashEditText.getText().toString() + "원";
+                        kakaopayPaymentRequest kakaopayPaymentRequest = new kakaopayPaymentRequest();
                         kakaopayPaymentRequest.execute(userSelectPrice,userNickname);
                     }
                 }
@@ -150,28 +160,15 @@ public class CashPaymentActivity extends AppCompatActivity {
                 if(userSelectPrice.equals("금액을 선택해주세요.")){
                     Toast.makeText(this, "충전하실 금액을 선택해주세요.", Toast.LENGTH_SHORT).show();
                 } else {
+                    kakaopayPaymentRequest kakaopayPaymentRequest = new kakaopayPaymentRequest();
                     kakaopayPaymentRequest.execute(userSelectPrice,userNickname);
                 }
             }
         });
 
     }
-
+    //카카오페이 결제요청 api AsyncTask
     private class kakaopayPaymentRequest extends AsyncTask<String,String,String>{
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-//            GlobalApplication.getGlobalApplicationContext().progressOn(CashPaymentActivity.this,null);
-
-        }
-
-        @Override
-        protected void onPostExecute(String s) {
-            super.onPostExecute(s);
-//            GlobalApplication.getGlobalApplicationContext().progressOff();
-
-        }
 
         @Override
         protected String doInBackground(String... strings) {
@@ -197,8 +194,8 @@ public class CashPaymentActivity extends AppCompatActivity {
                     .add("tax_free_amount","0")
                     .add("vat_amount","0")
                     .add("approval_url","http://210.89.190.131/kakaoPaymentApprove.php?userid="+userNickname)
-                    .add("fail_url","http://106.10.43.183")
-                    .add("cancel_url","http://115.71.232.155")
+                    .add("fail_url","http://210.89.190.131/kakaoPaymentFail.php?userid="+userNickname)
+                    .add("cancel_url","http://210.89.190.131/kakaoPaymentCancel.php?userid="+userNickname)
                     .build();
 
             Request request = new Request.Builder()
@@ -213,6 +210,7 @@ public class CashPaymentActivity extends AppCompatActivity {
         }
     }
 
+    //카카오페이 결제요청 API 결과
     private Callback kakaoPaymentRequestCallback = new Callback() {
         @SuppressLint("LongLogTag")
         @Override
@@ -240,6 +238,7 @@ public class CashPaymentActivity extends AppCompatActivity {
                 webViewSendUrl.putExtra("tid",tid);
                 webViewSendUrl.putExtra("androidScheme",androidAppScheme);
                 startActivity(webViewSendUrl);
+                finish();
 
 
                 Log.e("tid는?",nextRedirectAppUrl);
@@ -249,6 +248,7 @@ public class CashPaymentActivity extends AppCompatActivity {
         }
     };
 
+    //카카오페이 결제승인 API 요청 전 TID  redis에 저장하기위해 tid와 유저 닉네임 보내주는 AsyncTask
     private class kakaopayTidSendToApproveUrl extends AsyncTask<String,String,String>{
 
 
@@ -271,6 +271,7 @@ public class CashPaymentActivity extends AppCompatActivity {
         }
     }
 
+    //카카오페이 결제승인 API 요청 전 TID  redis에 저장하기위해 tid와 유저 닉네임 보내준 결과
     private Callback kakaoPaymentRequestTidCallback = new Callback() {
         @SuppressLint("LongLogTag")
         @Override
@@ -285,6 +286,51 @@ public class CashPaymentActivity extends AppCompatActivity {
             Log.e("kakaoPaymentReqestTidCallback","responseData : " + responseData);
         }
     };
+
+    //사용자 별풍선 정보 데이터베이스에서 가져오는 AsyncTask
+
+    private class userBalloonsGetToDB extends AsyncTask<String,String,String>{
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            GlobalApplication.getGlobalApplicationContext().progressOn(CashPaymentActivity.this,null);
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            GlobalApplication.getGlobalApplicationContext().progressOff();
+        }
+
+        @Override
+        protected String doInBackground(String... strings) {
+
+            Connection pgConnection;
+            Statement pgStatement;
+            ResultSet pgResult;
+
+            String pgJDBCurl = "jdbc:postgresql://210.89.190.131/streetlive";
+            String pgUser = "postgres";
+            String pgPassword = "rmstnek123";
+            String sql;
+            try{
+                pgConnection = DriverManager.getConnection(pgJDBCurl,pgUser,pgPassword);
+                pgStatement = pgConnection.createStatement();
+                sql = "select * from login."+userLoginServiceInfo+"_user where nickname ='"+userNickname+"';";
+                pgResult = pgStatement.executeQuery(sql);
+                while(pgResult.next()){
+                    String balloons = pgResult.getString("balloons");
+                    paymentUserCashView.setText(balloons);
+                }
+                pgStatement.close();
+            }catch (Exception e){
+                Log.e("UserBalloonsGetToDB",e.toString());
+            }
+
+            return null;
+        }
+    }
 
     // Typekit 라이브러리 (폰트 적용)를 사용하기 위해 만든 메소드
     @Override

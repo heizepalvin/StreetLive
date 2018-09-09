@@ -6,14 +6,13 @@
     android:layout_height="match_parent"
     android:background="@android:color/holo_orange_light"
     android:gravity="center"
-
+    android:id="@+id/cashEndingActivityBackground"
     android:orientation="vertical">
 
     <TextView
-        android:id="@+id/textView15"
+        android:id="@+id/cashEndingActivityText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="결제가 완료되었습니다!"
         android:textColor="@color/browser_actions_bg_grey"
         android:textSize="40dp" />
 
@@ -22,6 +21,14 @@
         android:layout_width="250dp"
         android:layout_height="250dp"
         app:lottie_autoPlay="true"
-        app:lottie_fileName="gift_popup.json"
         app:lottie_loop="true" />
+
+    <com.airbnb.lottie.LottieAnimationView
+        android:id="@+id/cashEndingActivityHomeBtn"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_marginTop="50dp"
+        app:lottie_autoPlay="true"
+        app:lottie_fileName="home.json"
+        app:lottie_loop="false" />
 </LinearLayout>

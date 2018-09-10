@@ -191,9 +191,6 @@ public class CreateLiveRoomActivity extends AppCompatActivity implements Connect
         requestPermissionCamera();
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-        chatItems = new ArrayList<>();
-        chattingAdapter = new ChattingAdapter(getCreatRoomActivityInstance,R.layout.chatting_item,chatItems);
-        previewChatLiveView.setAdapter(chattingAdapter);
     }
 
     @Override
@@ -235,6 +232,7 @@ public class CreateLiveRoomActivity extends AppCompatActivity implements Connect
                     ChattingItem userChatData = new ChattingItem(userNickname,previewChatInputText.getText().toString());
                     chatItems.add(userChatData);
                     chattingAdapter.notifyDataSetChanged();
+                    Log.e("chatItemSize",chatItems.size()+" 내용 : " + chatItems.get(0).getChattingData());
                     previewChatInputText.setText("");
                 }
             });
@@ -334,7 +332,7 @@ public class CreateLiveRoomActivity extends AppCompatActivity implements Connect
 
     private void setInit(){
 
-        //18/05/29
+
         Log.e("onCreate",cameraFacing+"?");
 //        surfaceView = new CameraPreview(getCreatRoomActivityInstance,cameraFacing);
         opencvCamera = new CameraPreview(getCreatRoomActivityInstance,cameraFacing);
@@ -343,6 +341,11 @@ public class CreateLiveRoomActivity extends AppCompatActivity implements Connect
 //        setContentView(R.layout.create_live_room_activity);
         addContentView(LayoutInflater.from(this).inflate(R.layout.create_live_room_activity,null), new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         ButterKnife.bind(this);
+
+        chatItems = new ArrayList<>();
+        chattingAdapter = new ChattingAdapter(getCreatRoomActivityInstance,R.layout.chatting_item,chatItems);
+        previewChatLiveView.setAdapter(chattingAdapter);
+
         SharedPreferences createLiveRoomTitle = getSharedPreferences("liveRoomTitle",MODE_PRIVATE);
         SharedPreferences getLoginUserInfo = getSharedPreferences("userLoginInfo",MODE_PRIVATE);
         previewTitle = createLiveRoomTitle.getString("title",getLoginUserInfo.getString("nickname","")+"님의 방송입니다.");
@@ -350,12 +353,10 @@ public class CreateLiveRoomActivity extends AppCompatActivity implements Connect
         userNickname = getLoginUserInfo.getString("nickname","null");
         opencvCamera.setVisibility(SurfaceView.VISIBLE);
         opencvCamera.enableView();
-        //18/06/04
 
         redisPostDataSend redisPostDataSend = new redisPostDataSend();
         redisPostDataSend.execute("CreateLiveRoomActivity","ActivityIn");
 
-        //18/06/11
 //        rtmpCamera1 = new RtmpCamera1(surfaceView,getCreatRoomActivityInstance);
         rtmpCamera1 = new RtmpCamera1(opencvCamera,getCreatRoomActivityInstance);
 //        apiManager = new Camera1ApiManager(surfaceView,rtmpCamera1);
@@ -499,23 +500,20 @@ public class CreateLiveRoomActivity extends AppCompatActivity implements Connect
             }
         });
 
-        previewChatSendBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(previewChatInputText.getText().toString().equals("") || previewChatInputText.getText().toString().replace(" ","").equals("")){
-                    Toast.makeText(CreateLiveRoomActivity.this, "내용을 입력해주세요.", Toast.LENGTH_SHORT).show();
-                } else {
-                    try{
-                        Log.e("여기들어와?","들어와");
-                        final String returnMsg = userNickname+"/"+previewChatInputText.getText().toString();
-                        Log.e("여기들어와??",returnMsg);
-                        if(!TextUtils.isEmpty(returnMsg)){
-                            new SendmsgTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,returnMsg);
-                            Log.e("여기들어와???","들어와");
-                        }
-                    }catch (Exception e){
-                        e.printStackTrace();
+        previewChatSendBtn.setOnClickListener(v -> {
+            if(previewChatInputText.getText().toString().equals("") || previewChatInputText.getText().toString().replace(" ","").equals("")){
+                Toast.makeText(CreateLiveRoomActivity.this, "내용을 입력해주세요.", Toast.LENGTH_SHORT).show();
+            } else {
+                try{
+                    Log.e("여기들어와?","들어와");
+                    final String returnMsg = userNickname+"/"+previewChatInputText.getText().toString();
+                    Log.e("여기들어와??",returnMsg);
+                    if(!TextUtils.isEmpty(returnMsg)){
+                        new SendmsgTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,returnMsg);
+                        Log.e("여기들어와???","들어와");
                     }
+                }catch (Exception e){
+                    e.printStackTrace();
                 }
             }
         });
@@ -622,7 +620,7 @@ public class CreateLiveRoomActivity extends AppCompatActivity implements Connect
                                 socketChannel.connect(new InetSocketAddress("210.89.190.131",5001));
                                 Log.e("체크업데이트","소켓연결함");
 //                                checkUpdate.start();
-                                Log.e("리시브도나",receiveMsgTask.getStatus()+"");
+//                                Log.e("리시브도나",receiveMsgTask.getStatus()+"");
 //                                Log.e("체크업데이트",checkUpdate.isAlive()+"");
                             }catch (Exception e){
                                 e.printStackTrace();
@@ -1004,6 +1002,7 @@ public class CreateLiveRoomActivity extends AppCompatActivity implements Connect
                 ActivityCompat.requestPermissions(CreateLiveRoomActivity.this,new String[]{Manifest.permission.CAMERA,Manifest.permission.RECORD_AUDIO,Manifest.permission.WRITE_EXTERNAL_STORAGE},RESULT_PERMISSIONS);
             } else {
                 setInit();
+
                 return true;
             }
         } else {
@@ -1075,20 +1074,17 @@ public class CreateLiveRoomActivity extends AppCompatActivity implements Connect
         }
     }
 
-
     @Override
-    protected void onPause() {
-        super.onPause();
-
+    public void onBackPressed() {
+//        super.onBackPressed();
+        //뒤로가기 버튼 막기
+        if(rtmpCamera1.isStreaming()){
+            Toast.makeText(getCreatRoomActivityInstance, "뒤로가시려면 방송을 먼저 종료해주세요.", Toast.LENGTH_SHORT).show();
+        }else {
+            finish();
+        }
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-//        redisPostDataSend.execute("CreateLiveRoomActivity","ActivityIn");
-
-    }
     //okhttp3
     private final OkHttpClient okHttpClient = new OkHttpClient();
     public class redisPostDataSend extends AsyncTask<String,Void,String>{

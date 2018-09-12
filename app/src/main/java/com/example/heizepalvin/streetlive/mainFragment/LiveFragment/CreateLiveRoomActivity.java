@@ -51,6 +51,8 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.airbnb.lottie.L;
+import com.airbnb.lottie.LottieAnimationView;
 import com.example.heizepalvin.streetlive.R;
 import com.github.faucamp.simplertmp.RtmpPublisher;
 import com.github.faucamp.simplertmp.io.RtmpConnection;
@@ -151,6 +153,8 @@ public class CreateLiveRoomActivity extends AppCompatActivity implements Connect
     Button previewChatSendBtn;
     @BindView(R.id.previewChatLayout)
     LinearLayout previewChatLayout;
+    @BindView(R.id.previewBalloonAnimation)
+    LottieAnimationView previewBalloonAnimation;
 
     // 플래시가 켜져있는지 안켜져있는지 확인하는 Boolean
     private boolean flashOnOff = false;
@@ -170,6 +174,7 @@ public class CreateLiveRoomActivity extends AppCompatActivity implements Connect
     private String userGender;
     private String userStreamingKey;
     private String liveThumnail;
+    private String userLoginServiceInfo;
 
     //Netty 채팅 서버 연결
 
@@ -319,14 +324,72 @@ public class CreateLiveRoomActivity extends AppCompatActivity implements Connect
         public void run() {
             String receive = chattingMsg;
             Log.e("받는메시지",receive);
-            String[] splitReceiveMsg = receive.split("/");
-            String receiveNickname = splitReceiveMsg[0];
-            String recevieMsg = splitReceiveMsg[1];
-            ChattingItem receiveItem = new ChattingItem(receiveNickname,recevieMsg);
-            chatItems.add(receiveItem);
-            chattingAdapter.notifyDataSetChanged();
+
+            if(receive.contains("[StreetLive]") && receive.contains("별풍선")){
+
+                //스트리머가 별풍선을 받았을때
+                String[] splitReceiveMsg = receive.split("/");
+                String receiveNickname = splitReceiveMsg[0];
+                String receiveMsgFirst = splitReceiveMsg[1];
+                String receiveMsgBalloons = splitReceiveMsg[2];
+                String receiveMsgSecond = splitReceiveMsg[3];
+                userGiftBalloonsAdd userGiftBalloonsAdd = new userGiftBalloonsAdd();
+                userGiftBalloonsAdd.execute(receiveMsgBalloons);
+
+                String receiveMsg = receiveMsgFirst+receiveMsgBalloons+receiveMsgSecond;
+                ChattingItem receiveItem =new ChattingItem(receiveNickname,receiveMsg);
+                chatItems.add(receiveItem);
+                chattingAdapter.notifyDataSetChanged();
+                previewBalloonAnimation.setAnimation("balloons.json");
+                previewBalloonAnimation.playAnimation();
+            } else {
+
+                //일반 채팅
+                String[] splitReceiveMsg = receive.split("/");
+                String receiveNickname = splitReceiveMsg[0];
+                String receiveMsg = splitReceiveMsg[1];
+                ChattingItem receiveItem = new ChattingItem(receiveNickname,receiveMsg);
+                chatItems.add(receiveItem);
+                chattingAdapter.notifyDataSetChanged();
+
+            }
+
+
         }
     };
+    //스트리머가 선물받은 별풍선 데이터베이스에 추가
+    private class userGiftBalloonsAdd extends AsyncTask<String,String,String>{
+
+        @Override
+        protected String doInBackground(String... strings) {
+
+            String balloonsCount = strings[0];
+
+            java.sql.Connection connection;
+            Statement pgStatement;
+            int pgResult;
+
+            String pgJDBCurl = "jdbc:postgresql://210.89.190.131/streetlive";
+            String pgUser = "postgres";
+            String pgPassword = "rmstnek123";
+            String sql;
+
+            try{
+                connection = DriverManager.getConnection(pgJDBCurl,pgUser,pgPassword);
+                pgStatement = connection.createStatement();
+                sql = "update login."+userLoginServiceInfo+"_user set balloons = balloons+"+balloonsCount+" where nickname = '"+userNickname+"';";
+                pgResult = pgStatement.executeUpdate(sql);
+                if(pgResult!=0){
+                    Log.e("userGiftBalloonsAdd","SuccessUpdate");
+                    pgStatement.close();
+                }
+
+            } catch (Exception e){
+                Log.e("userGiftBalloonsAdd",e.toString());
+            }
+            return null;
+        }
+    }
 
 
 
@@ -351,6 +414,7 @@ public class CreateLiveRoomActivity extends AppCompatActivity implements Connect
         previewTitle = createLiveRoomTitle.getString("title",getLoginUserInfo.getString("nickname","")+"님의 방송입니다.");
         previewTitleText.setText(previewTitle);
         userNickname = getLoginUserInfo.getString("nickname","null");
+        userLoginServiceInfo = getLoginUserInfo.getString("service","null");
         opencvCamera.setVisibility(SurfaceView.VISIBLE);
         opencvCamera.enableView();
 

@@ -21,7 +21,9 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.airbnb.lottie.LottieAnimationView;
 import com.example.heizepalvin.streetlive.R;
+import com.example.heizepalvin.streetlive.login.kakao.GlobalApplication;
 import com.google.android.exoplayer2.DefaultRenderersFactory;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayerFactory;
@@ -48,12 +50,16 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.Connection;
 import okhttp3.FormBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -80,7 +86,10 @@ public class LiveRoomActivity extends AppCompatActivity{
     ImageButton liveRoomChatBtn;
     @BindView(R.id.liveRoomChatLayout)
     LinearLayout liveRoomChatLayout;
-
+    @BindView(R.id.liveRoomGiftBtn)
+    LottieAnimationView liveRoomGiftBtn;
+    @BindView(R.id.liveRoomBalloonAnimation)
+    LottieAnimationView liveRoomBalloonAnimation;
 
     //LiveFragmentActivity에서 넘겨받은 스트리밍 키
     private String streamingKey;
@@ -99,6 +108,10 @@ public class LiveRoomActivity extends AppCompatActivity{
     private String chatData;
 
     private String userNickname;
+    private String userLoginServiceInfo;
+    private int userBalloonsCount;
+    private int userSelectBalloons;
+
     private ArrayList<ChattingItem> chatItems;
     private ChattingAdapter chattingAdapter;
 
@@ -114,6 +127,12 @@ public class LiveRoomActivity extends AppCompatActivity{
         chattingAdapter = new ChattingAdapter(this,R.layout.chatting_item,chatItems);
         liveRoomChatListView.setAdapter(chattingAdapter);
 
+        //시청자의 별풍선 갯수 확인
+        userBalloonsConfirmToDB userBalloonsConfirmToDB = new userBalloonsConfirmToDB();
+        userBalloonsConfirmToDB.execute();
+
+
+
         //채팅 버튼 이벤트 리스너
         liveRoomChatBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -128,6 +147,8 @@ public class LiveRoomActivity extends AppCompatActivity{
         //유저 닉네임 가져오기
         SharedPreferences getLoginUserInfo = getSharedPreferences("userLoginInfo",MODE_PRIVATE);
         userNickname = getLoginUserInfo.getString("nickname","null");
+        userLoginServiceInfo = getLoginUserInfo.getString("service","null");
+
         //채팅 서버 접속
 
         chatHandler = new Handler();
@@ -155,25 +176,162 @@ public class LiveRoomActivity extends AppCompatActivity{
 
 
 
-        liveRoomChatSendBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (liveRoomChatInputText.getText().toString().equals("") || liveRoomChatInputText.getText().toString().replace(" ","").equals("")){
-                    Toast.makeText(LiveRoomActivity.this, "내용을 입력해주세요.", Toast.LENGTH_SHORT).show();
-                } else {
-                    try{
-                        final String returnMsg = userNickname+"/"+liveRoomChatInputText.getText().toString();
-                        if(!TextUtils.isEmpty(returnMsg)){
-                            new SendmsgTask().execute(returnMsg);
-                        }
-                    }catch (Exception e){
-                        e.printStackTrace();
+        liveRoomChatSendBtn.setOnClickListener(v -> {
+            if (liveRoomChatInputText.getText().toString().equals("") || liveRoomChatInputText.getText().toString().replace(" ","").equals("")){
+                Toast.makeText(LiveRoomActivity.this, "내용을 입력해주세요.", Toast.LENGTH_SHORT).show();
+            } else {
+                try{
+                    final String returnMsg = userNickname+"/"+liveRoomChatInputText.getText().toString();
+                    if(!TextUtils.isEmpty(returnMsg)){
+                        new SendmsgTask().execute(returnMsg);
                     }
+                }catch (Exception e){
+                    e.printStackTrace();
                 }
             }
         });
 
+        //별풍선을 방송자에게 선물할 수 있는 버튼 이벤트
+        liveRoomGiftBtn.setOnClickListener(v ->{
+            liveRoomGiftBtn.playAnimation();
+            //버튼 클릭시 선물하고싶은 별풍선 갯수를 입력하고 확인 버튼 누르면 전송
+            EditText balloonsCountEdit = new EditText(this);
+            balloonsCountEdit.setInputType(0x00000002);
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("StreetLive")
+                    .setMessage("선물하실 별풍선 갯수를 입력해주세요.(숫자만)")
+                    .setView(balloonsCountEdit)
+                    .setPositiveButton("선물하기",
+                            (dialog, which) -> {
+                                userSelectBalloons = Integer.parseInt(balloonsCountEdit.getText().toString());
+                                if(userSelectBalloons > userBalloonsCount){
+                                    Toast.makeText(LiveRoomActivity.this, "별풍선 갯수가 부족합니다. 충전해주세요!", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    Toast.makeText(LiveRoomActivity.this, "별풍선 선물이 완료되었습니다.", Toast.LENGTH_SHORT).show();
+                                    userBalloonsCount = userBalloonsCount - userSelectBalloons;
+                                    if(userBalloonsCount <= 0){
+                                        userBalloonsCount = 0;
+                                    }
+                                    userBalloonsEditToDB userBalloonsEditToDB = new userBalloonsEditToDB();
+                                    userBalloonsEditToDB.execute(String.valueOf(userSelectBalloons));
+                                }
+                            });
+                    builder.setNegativeButton("취소",
+                            (dialog, which) -> {
+
+                            });
+                    builder.show();
+
+        });
+
     }
+
+    //사용자 별풍선 갯수 확인하는 AsyncTask
+
+    private class userBalloonsConfirmToDB extends AsyncTask<String, String, String>{
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+            GlobalApplication.getGlobalApplicationContext().progressOn(LiveRoomActivity.this,null);
+
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            GlobalApplication.getGlobalApplicationContext().progressOff();
+
+            userBalloonsCount = Integer.parseInt(s);
+            Log.e("userBalloonsCount",userBalloonsCount+"");
+        }
+
+        @Override
+        protected String doInBackground(String... strings) {
+
+            java.sql.Connection pgConnection;
+            Statement pgStatement;
+            ResultSet pgResult;
+
+            String pgJDBCurl = "jdbc:postgresql://210.89.190.131/streetlive";
+            String pgUser = "postgres";
+            String pgPassword = "rmstnek123";
+            String sql;
+            String userBalloonsCountGet;
+
+            try{
+                pgConnection = DriverManager.getConnection(pgJDBCurl,pgUser,pgPassword);
+                pgStatement = pgConnection.createStatement();
+                sql = "select * from login."+userLoginServiceInfo+"_user where nickname ='"+userNickname+"';";
+                pgResult = pgStatement.executeQuery(sql);
+                while(pgResult.next()){
+                    userBalloonsCountGet = pgResult.getString("balloons");
+
+                    return userBalloonsCountGet;
+                }
+            }catch (Exception e){
+                Log.e("userBalloonsConfirmToDB",e.toString());
+            }
+            return null;
+        }
+    }
+
+    //유저가 사용한 별풍선 차감,적립하는 AsyncTask
+
+    private class userBalloonsEditToDB extends AsyncTask<String, String,Void>{
+
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            // 별풍선 선물했다고 메시지 전송
+
+            ChattingItem balloonsGiftChat = new ChattingItem("[StreetLive]",userNickname+"님이 별풍선 "+userSelectBalloons+"개를 선물하셨습니다.");
+            chatItems.add(balloonsGiftChat);
+            chattingAdapter.notifyDataSetChanged();
+            String balloonsGiftMsg = "[StreetLive]/"+userNickname+"님이 별풍선 /"+userSelectBalloons+"/개를 선물하셨습니다.";
+            new SendServerMsgTask().execute(balloonsGiftMsg);
+
+            liveRoomBalloonAnimation.setAnimation("balloons.json");
+            liveRoomBalloonAnimation.playAnimation();
+        }
+
+        @Override
+        protected Void doInBackground(String... strings) {
+            //사용자 별풍선 데이터베이스에서 차감하고, 해당 방송자에게 별풍선 개수 적립
+
+            java.sql.Connection connection;
+            Statement pgStatement;
+            int pgResult;
+
+            String pgJDBCurl = "jdbc:postgresql://210.89.190.131/streetlive";
+            String pgUser = "postgres";
+            String pgPassword = "rmstnek123";
+            String sql;
+
+            String minusBalloons = strings[0];
+
+            try{
+                connection = DriverManager.getConnection(pgJDBCurl,pgUser,pgPassword);
+                pgStatement = connection.createStatement();
+                sql = "update login."+userLoginServiceInfo+"_user set balloons = balloons-"+minusBalloons+" where nickname = '"+userNickname+"';";
+                pgResult = pgStatement.executeUpdate(sql);
+                if(pgResult!=0){
+                    Log.e("userBalloonsEditToDB","SuccessUpdate");
+                    pgStatement.close();
+                }
+
+            }catch (Exception e){
+                Log.e("userBalloonsEditToDB",e.toString());
+            }
+
+            return null;
+        }
+    }
+
+
+
     private class SendmsgTask extends AsyncTask<String, Void, Void>{
 
         @Override
@@ -256,11 +414,22 @@ public class LiveRoomActivity extends AppCompatActivity{
             String receive = chatData;
             Log.e("받는메시지",receive);
             String[] splitReceiveMsg = receive.split("/");
-            String receiveNickname = splitReceiveMsg[0];
-            String receiveMsg = splitReceiveMsg[1];
-            ChattingItem receiveItem = new ChattingItem(receiveNickname,receiveMsg);
-            chatItems.add(receiveItem);
-            chattingAdapter.notifyDataSetChanged();
+            if(receive.contains("[StreetLive]") && receive.contains("별풍선")){
+                String receiveNickname = splitReceiveMsg[0];
+                String receiveMsg = splitReceiveMsg[1]+splitReceiveMsg[2]+splitReceiveMsg[3];
+                ChattingItem receiveItem = new ChattingItem(receiveNickname,receiveMsg);
+                chatItems.add(receiveItem);
+                chattingAdapter.notifyDataSetChanged();
+                liveRoomBalloonAnimation.setAnimation("balloons.json");
+                liveRoomBalloonAnimation.playAnimation();
+            } else {
+                String receiveNickname = splitReceiveMsg[0];
+                String receiveMsg = splitReceiveMsg[1];
+                ChattingItem receiveItem = new ChattingItem(receiveNickname,receiveMsg);
+                chatItems.add(receiveItem);
+                chattingAdapter.notifyDataSetChanged();
+            }
+
         }
     };
 

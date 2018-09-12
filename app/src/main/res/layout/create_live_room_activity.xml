@@ -146,4 +146,14 @@
 
     </LinearLayout>
 
+    <com.airbnb.lottie.LottieAnimationView
+        android:id="@+id/previewBalloonAnimation"
+        android:layout_width="200dp"
+
+        android:layout_height="200dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="219dp"
+         />
+
 </RelativeLayout>
